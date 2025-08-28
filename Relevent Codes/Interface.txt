@@ -1,0 +1,100 @@
+# Import necessary libraries
+import warnings
+warnings.filterwarnings("ignore")
+import joblib
+import pandas as pd
+
+!pip install gradio
+# Import necessary library
+import gradio as gr
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+rf_classifier=joblib.load('/content/drive/MyDrive/Sudha-Thesis/Trained Model-RF/model.pkl')
+
+
+
+def map_inputs(Gender, Year, CGPA, Family_Status, Relationship_Status, Financial_Stress, Extreme_Ragging_Issue, Session_Jam, Social_Circle, Adjustment_Challenges, Consultancy_Service, Peer_Pressure, University_Educational_System):
+    input_data = {
+        'Gender': 1 if Gender == 'Male' else 0,
+        'Year': {'1st': 1, '2nd': 2, '3rd': 3, '4th': 4}[Year],
+        'CGPA': round(float(CGPA.split('-')[0].strip()), 2),
+        'Family Status': {'Not Supportive': 2, 'Moderate': 1, 'Supportive': 0}[Family_Status],
+        'Relationship Status': 1 if Relationship_Status == 'Single' else 0,
+        'Financial Stress': 0 if Financial_Stress == 'Self Earner' else 1,
+        'Extreme Ragging Issue': 1 if Extreme_Ragging_Issue == 'Yes' else 0,
+        'Session Jam': 1 if Session_Jam == 'Frequently' else 0,
+        'Social Circle': {'Small': 2, 'Moderate': 1, 'Large': 0}[Social_Circle],
+        'Adjustment Challenges ': {'Yes': 2, 'Moderate': 1, 'No': 0}[Adjustment_Challenges],
+        'Consultancy Service': 1 if Consultancy_Service == 'Absent' else 0,
+        'Peer Pressure': 1 if Peer_Pressure == 'Yes' else 0,
+        'University Educational System': 1 if University_Educational_System == 'Stressful' else 0
+    }
+    return pd.DataFrame([input_data])
+
+# Define the function to predict depression
+def predict_depression(Gender, Year, CGPA, Family_Status, Relationship_Status, Financial_Stress, Extreme_Ragging_Issue, Session_Jam, Social_Circle, Adjustment_Challenges, Consultancy_Service, Peer_Pressure, University_Educational_System):
+    test_sample = map_inputs(Gender, Year, CGPA, Family_Status, Relationship_Status, Financial_Stress, Extreme_Ragging_Issue, Session_Jam, Social_Circle, Adjustment_Challenges, Consultancy_Service, Peer_Pressure, University_Educational_System)
+    predicted_label = rf_classifier.predict(test_sample)
+    return 'High Possibility of Depression' if predicted_label[0] == 1 else 'Low Possibility of Depression'
+
+# Create the Gradio interface
+iface = gr.Interface(
+    fn=predict_depression,  # the function to use
+    inputs=[
+        gr.Radio(['Male', 'Female'], label="Gender"),
+        gr.Radio(['1st', '2nd', '3rd', '4th'], label="Year"),
+        gr.Textbox(label="CGPA (e.g., 3.0-4.0)"),
+        gr.Radio(['Not Supportive', 'Moderate', 'Supportive'], label="Family Status"),
+        gr.Radio(['Single', 'Married'], label="Relationship Status"),
+        gr.Radio(['Self Earner', 'Supported by family'], label="Financial Stress"),
+        gr.Radio(['Yes', 'No'], label="Extreme Ragging Issue"),
+        gr.Radio(['Frequently', 'Occasionally'], label="Session Jam"),
+        gr.Radio(['Small', 'Moderate', 'Large'], label="Social Circle"),
+        gr.Radio(['Yes', 'Moderate', 'No'], label="Adjustment Challenges"),
+        gr.Radio(['Absent', 'Present'], label="Consultancy Service in Campus"),
+        gr.Radio(['Yes', 'No'], label="Peer Pressure"),
+        gr.Radio(['Stressful', 'Adjustable'], label="University Educational System"),
+    ],  # multiple inputs
+    outputs=gr.Textbox(label="Prediction"),  # single output
+    title="Depression Prediction",
+    description="Enter the details to predict if the student is depressed."
+)
+
+# Launch the interface
+iface.launch()
+
+svm_classifier=joblib.load('/content/drive/MyDrive/Sudha-Thesis/Trained Model-SVM/model.pkl')
+
+# Define the function to predict depression
+def predict_depression2 (Gender, Year, CGPA, Family_Status, Relationship_Status, Financial_Stress, Extreme_Ragging_Issue, Session_Jam, Social_Circle, Adjustment_Challenges, Consultancy_Service, Peer_Pressure, University_Educational_System):
+    test_sample = map_inputs(Gender, Year, CGPA, Family_Status, Relationship_Status, Financial_Stress, Extreme_Ragging_Issue, Session_Jam, Social_Circle, Adjustment_Challenges, Consultancy_Service, Peer_Pressure, University_Educational_System)
+    predicted_label = svm_classifier.predict(test_sample)
+    return 'High Possibility of Depression' if predicted_label[0] == 1 else 'Low Possibility of Depression'
+
+# Create the Gradio interface
+iface = gr.Interface(
+    fn=predict_depression2,  # the function to use
+    inputs=[
+        gr.Radio(['Male', 'Female'], label="Gender"),
+        gr.Radio(['1st', '2nd', '3rd', '4th'], label="Year"),
+        gr.Textbox(label="CGPA (e.g., 3.0-4.0)"),
+        gr.Radio(['Not Supportive', 'Moderate', 'Supportive'], label="Family Status"),
+        gr.Radio(['Single', 'Married'], label="Relationship Status"),
+        gr.Radio(['Self Earner', 'Supported by family'], label="Financial Stress"),
+        gr.Radio(['Yes', 'No'], label="Extreme Ragging Issue"),
+        gr.Radio(['Frequently', 'Occasionally'], label="Session Jam"),
+        gr.Radio(['Small', 'Moderate', 'Large'], label="Social Circle"),
+        gr.Radio(['Yes', 'Moderate', 'No'], label="Adjustment Challenges"),
+        gr.Radio(['Absent', 'Present'], label="Consultancy Service in Campus"),
+        gr.Radio(['Yes', 'No'], label="Peer Pressure"),
+        gr.Radio(['Stressful', 'Adjustable'], label="University Educational System"),
+    ],  # multiple inputs
+    outputs=gr.Textbox(label="Prediction"),  # single output
+    title="Depression Prediction",
+    description="Enter the details to predict if the student is depressed."
+)
+
+# Launch the interface
+iface.launch()
